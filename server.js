@@ -70,9 +70,51 @@ function promptUser() {
     });
 }
 
+//Definition of operation functions:
+
+//Function to view all departments
+function viewDepartments() {
+    db.query('SELECT * FROM departments', function (err, results) {
+        if (err) throw err;
+        console.table(results);
+        promptUser();
+    });
+}
+
+//Function to view all roles
+function viewRoles() {
+    const query = `
+        SELECT roles.id, roles.title, roles.salary, departments.title AS department
+        FROM roles
+        INNER JOIN departments ON roles.departments_id = departments.id
+        `;
+    db.query(query, function (err, results) {
+        if (err) throw err;
+        console.table(results);
+        promptUser();
+    });
+}
+
+//Function to view all employees
+function viewEmployees() {
+    const query = `
+        SELECT employees.id, employees.firstname, employees.lastname,
+        roles.title AS role, departments.title AS department,
+        roles.salary, CONCAT(manager.firstname, ' ', manager.lastname) AS manager
+        FROM employees
+        LEFT JOIN roles ON employees.roles_id = roles.id
+        LEFT JOIN departments ON roles.departments_id = departments.id
+        LEFT JOIN employees AS manager ON employees.manager_id = manager.id
+        `;
+    db.query(query, function (err, results) {
+        if (err) throw err;
+        console.table(results);
+        promptUser();
+    });
+}
+
 //Start the Prompt
 promptUser();
-
 
 
 //Default response for any other request (Not Found)
