@@ -1,7 +1,7 @@
-const express = require('express');
 const inquirer = require('inquirer');
 const mysql = require('mysql2');
-const cTable = require('console.table');
+const table = require('console.table');
+const express = require('express');
 
 const PORT = process.env.PORT || 3001;
 const app = express();
@@ -112,6 +112,59 @@ function viewEmployees() {
         promptUser();
     });
 }
+
+//Function to add a department
+function addDepartment() {
+    inquirer.prompt({
+        name: 'departmentName',
+        type: 'input',
+        message: 'What is the name of the department you want to add?'
+    }).then(answer => {
+        db.query('INSERT INTO departments SET ?', {title: answer.departmentName}, function (err, result) {
+            if (err) throw err;
+            console.log('Department added successfully!');
+            promptUser();
+        });
+    });
+}
+
+//Function to add a role
+function addRole() {
+    db.query('SELECT * FROM departments', function (err, departments) {
+        if (err) throw err;
+        inquirer.prompt([
+            {
+                name: 'title',
+                type: 'input',
+                message: 'What is the title of the role?'
+            },
+            {
+                name: 'salary',
+                type: 'input',
+                message: 'What is the salary of the role?',
+                validate: value => !isNaN(value) || 'Please enter a valid number!'
+            },
+            {
+                name: 'department',
+                type: 'list',
+                choices: departments.map(department => ({name: department.title, value: department.id})),
+                message: 'Which department does this role belong to?'
+            }
+        ]).then(answers => {
+            db.query('INSERT INTO roles SET ?',
+            {
+                title: answers.title,
+                salary: answers.salary,
+                departments_id: answers.department
+            }, function (err, result) {
+                if (err) throw err;
+                console.log('Role added successfully!');
+                promptUser();
+            });
+        });
+    });
+}
+
 
 //Start the Prompt
 promptUser();
