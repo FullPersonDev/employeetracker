@@ -165,6 +165,82 @@ function addRole() {
     });
 }
 
+//Function to add an employee
+function addEmployee() {
+    db.query('SELECT * FROM roles', function (err, roles) {
+        if (err) throw err;
+        db.query('SELECT * FROM employees', function (err, employees){
+            if (err) throw err;
+            inquirer.prompt([
+                {
+                    name: 'firstName',
+                    type: 'input',
+                    message: 'What is the employee first name?'
+                },
+                {
+                    name: 'lastName',
+                    type: 'input',
+                    message: 'What is the employee last name?'
+                },
+                {
+                    name: 'role',
+                    type: 'list',
+                    choices: roles.map(role => ({ name: role.title, value: role.id})),
+                    message: 'What is the employee role?'
+                },
+                {
+                    name: 'manager',
+                    type: 'list',
+                    choices: [{ name: 'None', value: null}].concat(employees.map(employee => ({ name: employee.firstname + ' ' + employee.lastname, value: employee.id }))),
+                    message: 'Who is the employee manager?'
+                }
+            ]).then(answers => {
+                db.query('INSERT INTO employees SET ?',
+                {
+                    firstname: answers.firstName,
+                    lastname: answers.lastName,
+                    roles_id: answers.role,
+                    manager_id: answers.manager
+                }, function (err, result) {
+                    if (err) throw err;
+                    console.log('Employee added successfully!');
+                    promptUser();
+                });
+            });
+        });
+    });
+}
+
+//Function to update an employee role
+function updateEmployeeRole() {
+    db.query('SELECT * FROM employees', function (err, employees) {
+        if (err) throw err;
+        db.query('SELECT * FROM roles', function (err, roles) {
+            if (err) throw err;
+            inquirer.prompt([
+                {
+                    name: 'employee',
+                    type: 'list',
+                    choices: employees.map(emp => ({ name: emp.firstname + ' ' + emp.lastname, value: emp.id })),
+                    message: 'Which employee do you want to update?'
+                },
+                {
+                    name: 'role',
+                    type: 'list',
+                    choices: roles.map(role => ({ name: role.title, value: role.id })),
+                    message: 'What is the new role?'
+                }
+            ]).then(answers => {
+                db.query('UPDATE employees SET roles_id = ? WHERE id = ?',
+                [answers.role, answers.employee], function (err, result) {
+                    if (err) throw err;
+                    console.log('Employee role updated successfully!');
+                    promptUser();
+                });
+            });
+        });
+    });
+}
 
 //Start the Prompt
 promptUser();
