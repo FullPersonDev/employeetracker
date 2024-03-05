@@ -1,6 +1,5 @@
 const inquirer = require('inquirer');
 const mysql = require('mysql2');
-const table = require('console.table');
 const express = require('express');
 
 const PORT = process.env.PORT || 3001;
@@ -24,9 +23,8 @@ const db = mysql.createConnection(
 //Function to Prompt the user on what action they want to take
 function promptUser() {
     inquirer.prompt({
-        name: 'action',
         type: 'list',
-        message: 'What would you like to do?',
+        name: 'action',
         choices: [
             'View all departments',
             'View all roles',
@@ -36,7 +34,8 @@ function promptUser() {
             'Add an employee',
             'Update an employee role',
             'Exit'
-        ]
+        ],
+        message: 'What would you like to do?'
     }).then(answer => {
         switch (answer.action) {
             case 'View all departments':
@@ -100,7 +99,7 @@ function viewEmployees() {
     const query = `
         SELECT employees.id, employees.firstname, employees.lastname,
         roles.title AS role, departments.title AS department,
-        roles.salary, CONCAT(manager.firstname, ' ', manager.lastname) AS manager
+        roles.salary, manager.firstname AS manager
         FROM employees
         LEFT JOIN roles ON employees.roles_id = roles.id
         LEFT JOIN departments ON roles.departments_id = departments.id
@@ -116,8 +115,8 @@ function viewEmployees() {
 //Function to add a department
 function addDepartment() {
     inquirer.prompt({
-        name: 'departmentName',
         type: 'input',
+        name: 'departmentName',
         message: 'What is the name of the department you want to add?'
     }).then(answer => {
         db.query('INSERT INTO departments SET ?', {title: answer.departmentName}, function (err, result) {
@@ -134,19 +133,18 @@ function addRole() {
         if (err) throw err;
         inquirer.prompt([
             {
-                name: 'title',
                 type: 'input',
+                name: 'title',
                 message: 'What is the title of the role?'
             },
             {
-                name: 'salary',
                 type: 'input',
+                name: 'salary',
                 message: 'What is the salary of the role?',
-                validate: value => !isNaN(value) || 'Please enter a valid number!'
             },
             {
-                name: 'department',
                 type: 'list',
+                name: 'department',
                 choices: departments.map(department => ({name: department.title, value: department.id})),
                 message: 'Which department does this role belong to?'
             }
@@ -173,25 +171,25 @@ function addEmployee() {
             if (err) throw err;
             inquirer.prompt([
                 {
-                    name: 'firstName',
                     type: 'input',
+                    name: 'firstName',
                     message: 'What is the employee first name?'
                 },
                 {
-                    name: 'lastName',
                     type: 'input',
+                    name: 'lastName',
                     message: 'What is the employee last name?'
                 },
                 {
-                    name: 'role',
                     type: 'list',
+                    name: 'role',
                     choices: roles.map(role => ({ name: role.title, value: role.id})),
                     message: 'What is the employee role?'
                 },
                 {
-                    name: 'manager',
                     type: 'list',
-                    choices: [{ name: 'None', value: null}].concat(employees.map(employee => ({ name: employee.firstname + ' ' + employee.lastname, value: employee.id }))),
+                    name: 'manager',
+                    choices: employees.map(emp => ({ name: emp.firstname + ' ' + emp.lastname, value: emp.id })),
                     message: 'Who is the employee manager?'
                 }
             ]).then(answers => {
@@ -219,14 +217,14 @@ function updateEmployeeRole() {
             if (err) throw err;
             inquirer.prompt([
                 {
-                    name: 'employee',
                     type: 'list',
+                    name: 'employee',
                     choices: employees.map(emp => ({ name: emp.firstname + ' ' + emp.lastname, value: emp.id })),
                     message: 'Which employee do you want to update?'
                 },
                 {
-                    name: 'role',
                     type: 'list',
+                    name: 'role',
                     choices: roles.map(role => ({ name: role.title, value: role.id })),
                     message: 'What is the new role?'
                 }
@@ -244,12 +242,6 @@ function updateEmployeeRole() {
 
 //Start the Prompt
 promptUser();
-
-
-//Default response for any other request (Not Found)
-app.use((req, res) => {
-    res.status(404).end();
-});
 
 app.listen(PORT, () => {
     console.log(`Server running on https://localhost:${PORT}`);
